@@ -1,0 +1,31 @@
+{{define "images"}}
+
+<!doctype html>
+<html lang="en" class="h-100">
+    <head>
+        {{template "meta"}}
+        {{template "styles"}}
+        <title>Title</title>
+    </head>
+<body class="d-flex flex-column h-100">
+    <table class="table">
+        <th>Namespace</th>
+        <th>Deployment</th>
+        <th>URLs</th>
+        <th>Label project</th>
+
+        {{range .}}
+        <tr>
+            <td>{{.Namespaces}}</td>
+            <td>{{range .Deployments}}{{.}}<br>{{end}}</td>
+            <td>{{range .URLs}}<a target="_blank" href="https://{{.}}">https://{{.}}</a><br>{{end}}</td>
+            <td>{{.Tags}}</td>
+        </tr>
+        {{end}}
+
+    </table>
+    {{template "scripts"}}
+</body>
+</html>
+
+{{end}}

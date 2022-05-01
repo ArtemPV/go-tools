@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: delete-deployment
+  name: delete-deployment
+  namespace: {DEVOPS_NAMESPACE}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+
+kind: ClusterRole
+metadata:
+  labels:
+    app: delete-deployment
+  name: delete-deployment-role
+  namespace: {DEVOPS_NAMESPACE}
+rules:
+  - apiGroups:
+    - ""
+    - "apps"
+    - "extensions"
+    - "batch"
+    - "networking.k8s.io"
+    resources:
+    - deployments
+    - daemonsets
+    - statefulsets
+    - ingresses
+    - configmaps
+    - secrets
+    - services
+    - cronjobs
+    - jobs
+    - persistentvolumeclaims
+    - pods
+    - replicasets
+    verbs:
+    - list
+    - get
+    - watch
+    - delete 
+    - deletecollection
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: delete-deployment
+  name: delete-deployment-binding
+  namespace: {DEVOPS_NAMESPACE}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: delete-deployment-role
+subjects:
+  - kind: ServiceAccount
+    name: delete-deployment
+    namespace: {DEVOPS_NAMESPACE}
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: delete-deployment
+  namespace: {DEVOPS_NAMESPACE}
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: delete-deployment
+        spec:
+          serviceAccountName: delete-deployment
+          imagePullSecrets:
+          - name: {SECRET}
+          containers:
+          - name: delete-deployment
+            image: {IMAGE}
+            env:
+            - name: NAMESPACES
+              value: {NAMESPACES}
+            - name: DAYS
+              value: "8"
+            - name: LABEL1
+              value: "test1-"
+            - name: LABEL2
+              value: "test2-"
+            resources:
+              requests:
+                memory: "50Mi"
+                cpu: "100m"
+              limits:
+                memory: "500Mi"
+                cpu: "200m"
+          restartPolicy: Never

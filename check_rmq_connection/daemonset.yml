@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: rmq-checker
+    project: rmq-checker
+  name: rmq-checker
+spec:
+  selector:
+    matchLabels:
+      app: rmq-checker
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "80"
+        prometheus.io/scheme: http
+        prometheus.io/scrape: "true"
+      labels:
+        app: rmq-checker
+        project: rmq-checker
+    spec:
+      imagePullSecrets:
+      - name: {SECRET}
+      containers:
+      - image: {IMAGE}
+        name: rmq-checker
+        imagePullPolicy: Always
+        env:
+        - name: RMQ_USER
+          value: {RMQ_USER}
+        - name: RMQ_PASSWORD
+          value: {RMQ_PASSWORD}
+        - name: RMQ_HOST
+          value: {RMQ_HOST}
+        - name: RMQ_VHOST
+          value: {RMQ_VHOST}
+        - name: RMQ_PORT
+          value: {RMQ_PORT}
+        resources:
+          requests:
+            memory: "10Mi"
+            cpu: "10m"
+          limits:
+            memory: "50Mi"
+            cpu: "50m"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rmq-checker
+  labels:
+    project: rmq-checker
+spec:
+  selector:
+    app: rmq-checker
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
